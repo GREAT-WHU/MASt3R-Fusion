@@ -41,3 +41,9 @@ MASt3R-Fusion is a SLAM system that tightly integrates feed-forward pointmap reg
 </p>
 
 
+<p align="center">
+  <img src="./assets/calib.gif" alt="图像描述" width="1200px"><br>
+  <em>Fig. 3 Joint optimization of intrinsics and poses based on V-I data.</em>
+</p>
+
+
