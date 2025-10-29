@@ -1,0 +1,9 @@
+*.pt
+*.h5
+*.pkl
+*.npz
+*.log
+*.txt
+temp*
+thirdparty*
+evo*
