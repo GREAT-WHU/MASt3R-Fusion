@@ -125,8 +125,12 @@ This would generate the following files:
 The following command is used for loop detection and cross-temporal data association:
 
 ```bash
-python main_loop.py --config "config/base_kitti360.yaml" --h5_file "data.h5" --loop_output "loop.pkl"
+python main_loop.py \
+         --config "config/base_kitti360.yaml" \
+         --h5_file "data.h5" \
+         --loop_output "loop.pkl"
 ```
+
 This would generate the following file:
 - **loop.pkl**: Storing the loop closures (candidate pairs and relative transformation estimation).
 
@@ -161,8 +165,13 @@ python evaluation/evaluate_kitti360.py
 
 For visualization of the reconstruction results, run: 
 ```bash
-python evaluation/check_h5.py --config config/base_kitti360.yaml --h5 data.h5 --calib config/intrinsics_kitti360.yaml # using real-time poses
-python evaluation/check_h5.py --config config/base_kitti360.yaml --h5 data.h5 --calib config/intrinsics_kitti360.yaml --pose_file result_post.txt # using globally optimized poses
+python evaluation/check_h5.py --config config/base_kitti360.yaml \
+         --h5 data.h5 \
+         --calib config/intrinsics_kitti360.yaml # using real-time poses
+python evaluation/check_h5.py --config config/base_kitti360.yaml \
+         --h5 data.h5 \
+         --calib config/intrinsics_kitti360.yaml \
+         --pose_file result_post.txt # using globally optimized poses
 ```
 
 ## Run on SuBT-MRS (V + I)
@@ -177,8 +186,8 @@ bash batch_subt_loop.sh # for global SLAM
 ```
 and
 ```bash
-python evaluate_subt_single.py # for evaluation of the pose estimation results;
-python check_h5_subt.py # for visualization of the reconstruction results.
+python evaluation/evaluate_subt.py # for evaluation of the pose estimation results;
+python evaluation/check_h5.py # for visualization of the reconstruction results.
 ```
 
 ## Run on Wuhan Dataset (V + I + G)
