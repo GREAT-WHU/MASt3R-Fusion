@@ -181,7 +181,6 @@ Download the V-I sequences of Subt-MRS dataset [here](https://superodometry.com/
 Similar to KITTI-360, just check the following scripts:
 ```bash
 bash batch_subt_vi.sh # for real-time SLAM
-bash batch_subt_vi_viz.sh # for real-time SLAM (with visualization)
 bash batch_subt_loop.sh # for global SLAM
 ```
 and
