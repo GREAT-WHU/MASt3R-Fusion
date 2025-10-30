@@ -5,7 +5,7 @@
 <p align="center">
   <img src="./assets/abs2_.png" alt="" width="600px"><br>
   <em>(The <b>heatmap</b> indicates the 
-	inter-frame angle of cross-temporal  data association (loop closure).)<br>
+	inter-frame angle of cross-temporal  data association (loop closure).)</em><br>
 </p>
 
 [[Paper](https://arxiv.org/abs/2509.20757)] [Video (coming soon...)]
@@ -210,15 +210,15 @@ Once everything is ready, refer to the instructions above and give it a try!
 ## Results
 
 <p align="center">
-  <img src="./assets/cross.png" alt="图像描述" width="800px"><br>
+  <img src="./assets/cross.png" alt="" width="800px"><br>
 <em>Fig. 1 Cross-temporal association (loop closure) enpowered by feed-forward model and verified by probabilistic optimization.<br>
  </em>
 </p>
 
 <p align="center">
-  <img src="./assets/kitti_traj1.svg" alt="图像描述" width="500px"><br>
+  <img src="./assets/kitti_traj1.svg" alt="" width="500px"><br>
     <em>(a) w/o loop closure<br>
-  <img src="./assets/kitti_traj2.svg" alt="图像描述" width="500px"><br>
+  <img src="./assets/kitti_traj2.svg" alt="" width="500px"><br>
       <em>(b) w/ loop closure<br>
 <em>Fig. 2 Monocular V-I SLAM performance on KITTI-360.<br>
  </em>
@@ -226,21 +226,21 @@ Once everything is ready, refer to the instructions above and give it a try!
 
 
 <p align="center">
-  <img src="./assets/subt0_traj.svg" alt="图像描述" width="500px"><br>
+  <img src="./assets/subt0_traj.svg" alt="" width="500px"><br>
     <em>(a) w/o loop closure<br>
-  <img src="./assets/subt1_traj.svg" alt="图像描述" width="500px"><br>
+  <img src="./assets/subt1_traj.svg" alt="" width="500px"><br>
       <em>(b) w/ loop closure<br>
 <em>Fig. 3 Monocular V-I SLAM performance on SubT-MRS.<br>
 </p>
 
 
 <p align="center">
-  <img src="./assets/calib.gif" alt="图像描述" width="1200px"><br>
+  <img src="./assets/calib.gif" alt="" width="1200px"><br>
   <em>Fig. 4 Joint optimization of intrinsics and poses based on V-I data.</em>
 </p>
 
 <p align="center">
-  <img src="./assets/recon.png" alt="图像描述" width="1800px"><br>
+  <img src="./assets/recon.png" alt="" width="1800px"><br>
   <em>Fig. 5 Some reconstruction results.</em>
 </p>
 
