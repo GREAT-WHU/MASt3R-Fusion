@@ -58,12 +58,12 @@ pip install h5py pyparsing
 
 ### ⚙️ GTSAM Installation
 
-Next, compile and install the **modified version of GTSAM**,  
+Next, compile and install the **modified version of [GTSAM](https://github.com/yuxuanzhou97/gtsam)**,  
 which includes additional functionalities such as **marginalization** and **Sim(3) visual constraints**.
 
 ```bash
 conda activate mast3r_fusion
-git clone https://github.com/yuxuanzhou97/gtsam
+git clone https://github.com/yuxuanzhou97/gtsam.git
 cd gtsam
 mkdir build && cd build
 cmake .. -DGTSAM_BUILD_PYTHON=1 -DGTSAM_PYTHON_VERSION=3.11.9 -DPYTHON_EXECUTABLE=`which python`
