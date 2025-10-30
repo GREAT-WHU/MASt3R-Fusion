@@ -14,7 +14,7 @@ uniform mat4 m_proj;
 uniform int width;
 uniform int height;
 uniform float conf_threshold;
-uniform float radius = 0.003;
+uniform float radius = 0.02;
 
 uniform sampler2D pointmap;
 uniform sampler2D confs;

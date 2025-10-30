@@ -435,7 +435,7 @@ class Window(WindowEvents):
         if "radius" in self.pointmap_prog:
             _, self.pointmap_prog["radius"].value = imgui.drag_float(
                 "radius",
-                0.02,
+                self.pointmap_prog["radius"].value,
                 0.0001,
                 min_value=0.0,
                 max_value=0.1,
