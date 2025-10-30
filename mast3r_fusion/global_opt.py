@@ -169,21 +169,7 @@ class FactorGraph:
         self.cur_result  = None
         # sliding window related
 
-
-        # noise = np.array([ 0.0003924 * 10,0.000205689024915 * 10, 0.004905 * 10, 0.000001454441043 * 500])/100.0 /2.0
-        # noise = np.array([ 0.0003924 * 10,0.000205689024915 * 10, 0.004905 * 10, 0.000001454441043 * 500])/100.0 / 4.0
-        # noise = np.array([ 0.0003924 * 10,0.000205689024915 * 10, 0.004905 * 10, 0.000001454441043 * 500])/100.0 / 2.0
-        # noise = np.array([ 0.0003924 * 10,0.000205689024915 * 10, 0.004905 *   2, 0.000001454441043 * 50])/100.0 / 2.0
-
-        
-        # noise = np.array([ 0.0003924 * 10,0.000205689024915 * 10, 0.004905 *   2, 0.000001454441043 * 100]) / 100.0 / 2.0
-        # noise = np.array([ 0.0003924 * 10, 0.000205689024915 * 10, 0.004905 * 10, 0.000001454441043 * 50]) /100.0 / 2.0
-        
-        # noise = np.array([ 0.0003924 * 20, 0.000205689024915 * 20, 0.004905 * 2, 0.000001454441043 * 50]) /100.0 / 2.0
-
-        # self.init_bias_noise = np.array([0.01,0.01,0.01,0.0001 ,0.0001 ,0.0001]) # for KITTI-360
-
-        self.init_bias_noise = np.array(config['ms_opt']['init_bias_noise']) # for 0412
+        self.init_bias_noise = np.array(config['ms_opt']['init_bias_noise'])
         self.regularization_noise = np.array(config['ms_opt']['regularization_noise'])
         noise = np.array(config['ms_opt']['imu_noise'])
         accel_noise_sigma = noise[0]
@@ -221,14 +207,14 @@ class FactorGraph:
 
         if config['ms_opt']['imu_format'] == 'custom_deg':
             try:
-                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=' '), degree = True, dt = imu_dt)
+                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=' '), degree = True, dt = args.imu_dt)
             except:
-                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=','), degree = True, dt = imu_dt)
+                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=','), degree = True, dt = args.imu_dt)
         elif config['ms_opt']['imu_format'] == 'custom_rad':
             try:
-                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=' '), degree = False, dt = imu_dt)
+                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=' '), degree = False, dt = args.imu_dt)
             except:
-                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=','), degree = False, dt = imu_dt)
+                self.imu_pool = data_utils.IMUPool(np.loadtxt(args.imu_path,delimiter=','), degree = False, dt = args.imu_dt)
         elif config['ms_opt']['imu_format'] == 'subt':
             all_imu = np.loadtxt(args.imu_path,delimiter=',',comments='#',skiprows=1)
             all_imu[:,0] /= 1e9
@@ -348,7 +334,7 @@ class FactorGraph:
         pickle.dump(self.all_factors,open(path,'wb'))
 
     def add_factors(self, ii, jj, min_match_frac, is_reloc=False):
-        print('1',time.time())
+        # print('1',time.time())
         kf_ii = [self.frames[idx] for idx in ii]
         kf_jj = [self.frames[idx] for idx in jj]
         feat_i = torch.cat([kf_i.feat for kf_i in kf_ii])
@@ -357,7 +343,7 @@ class FactorGraph:
         pos_j = torch.cat([kf_j.pos for kf_j in kf_jj])
         shape_i = [kf_i.img_true_shape for kf_i in kf_ii]
         shape_j = [kf_j.img_true_shape for kf_j in kf_jj]
-        print('2',time.time())
+        # print('2',time.time())
 
         (
             idx_i2j,
@@ -371,7 +357,7 @@ class FactorGraph:
         ) = mast3r_match_symmetric(
             self.model, feat_i, pos_i, feat_j, pos_j, shape_i, shape_j, self.subpixel_factor
         )
-        print('3',time.time())
+        # print('3',time.time())
 
         batch_inds = torch.arange(idx_i2j.shape[0], device=idx_i2j.device)[
             :, None
@@ -394,7 +380,7 @@ class FactorGraph:
         ni = valid_i.shape[1] * valid_i.shape[2]
         match_frac_j = valid_j.sum(dim=(1, 2)) / nj
         match_frac_i = valid_i.sum(dim=(1, 2)) / ni
-        print('4',time.time())
+        # print('4',time.time())
 
         ii_tensor = torch.as_tensor(ii, device=self.device)
         jj_tensor = torch.as_tensor(jj, device=self.device)
@@ -404,7 +390,7 @@ class FactorGraph:
         invalid_edges_orig = invalid_edges.clone()
         consecutive_edges = ii_tensor == (jj_tensor - 1)
         invalid_edges = (~consecutive_edges) & invalid_edges
-        print('5',time.time())
+        # print('5',time.time())
 
         if invalid_edges.any() and is_reloc:
             return False
@@ -422,7 +408,7 @@ class FactorGraph:
         Qi[invalid_edges_orig,:] *= 0.0001
         Qj = Qj[valid_edges]
         Qi = Qi[valid_edges]
-        print('6',time.time())
+        # print('6',time.time())
 
         self.ii = torch.cat([self.ii, ii_tensor])
         self.jj = torch.cat([self.jj, jj_tensor])
@@ -571,7 +557,6 @@ class FactorGraph:
                     if 'X' in sss and int(sss[1:])+pin > newest:
                         print(int(sss[1:])+pin)
                         newest = int(sss[1:])+pin
-                print('ssssss',pin,newest,sss)
             
             T_WCs = T_WCs[:newest-pin+1]
             Xs = Xs[:newest-pin+1]
@@ -648,7 +633,6 @@ class FactorGraph:
                     is_bad = False
                     for t0, t1, ddd in dd:
                         if t1 - t0 > 0.1: is_bad = True;print(t0,t1-t0,'!!!!!!!!!!!!!!!!!!!!!!!!')
-                    # if dd[-1][1] - dd[0][0] > 10: is_bad = True
                     if is_bad: new_preintegration =  gtsam.PreintegratedCombinedMeasurements(self.params_loose,self.bs[iii-1+pin])
                     for t0, t1, ddd in dd:
                         new_preintegration.integrateMeasurement(ddd[3:6],ddd[0:3]/180*math.pi,t1-t0)
@@ -671,7 +655,6 @@ class FactorGraph:
                         prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
                     else:
                         TTT = np.eye(4,4)
-                        # TTT[0:3,3] += 1000.0 
                         prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(TTT), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
                 
                 # Regularization
@@ -692,9 +675,6 @@ class FactorGraph:
             del aligncore
             pin = new_pin
             self.last_pin = pin
-
-            
-
         print('[INFO] marg.',time.time())
 
         # pin = 0
@@ -709,12 +689,10 @@ class FactorGraph:
         ii, jj, idx_ii2jj, valid_match, Q_ii2jj = self.prep_two_way_edges()
 
         mask = torch.logical_and(ii >= pin, jj >= pin)
-        # mask2 = torch.logical_or(torch.logical_and(ii >= 30, ii <= 40),torch.logical_and(jj >= 30, jj <= 40))
         ii = ii[mask]
         jj = jj[mask]
         idx_ii2jj = idx_ii2jj[mask]
         valid_match = valid_match[mask]
-        # Q_ii2jj[mask2][:] = 0.0
         Q_ii2jj = Q_ii2jj[mask]
         pose_data = T_WCs.data[:, 0, :]
         assert((torch.max(ii)-torch.min(ii)).item() == pose_data.shape[0]-1)
@@ -737,7 +715,7 @@ class FactorGraph:
 
         aligncore = mast3r_fusion_backends.AlignCoreCalib()
         for i in range(self.cfg['max_iters']):
-            print('time1',time.time())
+            # print('time1',time.time())
             pose_data_new = getPosesRel(np.arange(pin,pin+pose_data.shape[0]),pose_data,self.wTcs,self.ss,self.enable_ms)
             aligncore.init(
                 pose_data_new,
@@ -762,16 +740,13 @@ class FactorGraph:
                 self.subpixel_factor,self.d_diff_threshold
             )
 
-            print('time2',time.time())
+            # print('time2',time.time())
             
             H11 = torch.zeros([1,ii.shape[0],7,7],dtype=torch.float64,device='cpu')
             v11 = torch.zeros([1,ii.shape[0],7],dtype=torch.float64,device='cpu')
             c11 = torch.zeros([ii.shape[0]],dtype=torch.float64,device='cpu')
-            print(time.time())
             aligncore.hessian_pieces(H11,v11,c11)
-            print(time.time())
             vfactors = Align2GTSAM_factors(H11.numpy(),v11.numpy(),self.wTcs[pin:],self.ss[pin:],ii.cpu().numpy(),jj.cpu().numpy(),pin)
-            print(time.time())
 
             initials = gtsam.Values()
             cur_graph = gtsam.NonlinearFactorGraph()
@@ -794,16 +769,10 @@ class FactorGraph:
                             else:
                                 prior_factors.append(gtsam.PriorFactorDouble(S(iii),self.ss[iii+pin], gtsam.noiseModel.Diagonal.Sigmas([0.0001])))
                 else:
-                    # if iii < 2 and pin == 0:
-                    # Twi_ref = np.eye(4,4)
-                    # Twi_ref[1,3] = iii * 1.0
-                    # else:
-                    #     Twi_ref = gtsam.Pose3(T_WC @ self.Tic)
                     initials.insert(C(iii),gtsam.Pose3(self.Tic))
                     initials.insert(Z(iii),gtsam.Pose3(self.wTcs[iii+pin] @ np.linalg.inv(self.Tic)))
                     initials.insert(B(iii),self.bs[iii+pin])
                     initials.insert(V(iii),self.vs[iii+pin])
-                    # prior_factors.append(gtsam.PriorFactorDouble(S(iii),self.ss[iii+pin], gtsam.noiseModel.Diagonal.Sigmas([1.0**2])))
 
                     if iii+pin == 0:
                         if self.enable_ms:
@@ -816,7 +785,7 @@ class FactorGraph:
                         if iii == 0 and pin>0 :
                             prior_factors.append(self.marg_factor)
 
-                        print('z',time.time())
+                        # print('z',time.time())
                         if iii > 0:
                             new_preintegration =  gtsam.PreintegratedCombinedMeasurements(self.params,self.bs[iii-1+pin])
                             dd = self.imu_pool.get_records(self.poses_stamps[self.frames[iii-1+torch.min(ii).item()].frame_id],
@@ -831,7 +800,6 @@ class FactorGraph:
                                         Z(iii-1),V(iii-1),Z(iii),V(iii),B(iii-1),B(iii),\
                                         new_preintegration)
                             prior_factors.append(ff)
-                        print('z',time.time())
 
                         # Extrinsic constraint (i -> c)
                         prior_factors.append(gtsam_unstable.ExPoseConstraintFactor(Z(iii),X(iii),C(iii), gtsam.noiseModel.Diagonal.Sigmas(np.array([1e-4,1e-4,1e-4,1e-4,1e-4,1e-4]))))
@@ -857,7 +825,7 @@ class FactorGraph:
                         #                     gtsam.noiseModel.Diagonal.Sigmas(np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1]))))
             # print(time.time())
             # print('3',time.time())
-            print('time3',time.time())
+            # print('time3',time.time())
 
             # Visual constraint
             for h_factor in vfactors:
@@ -865,13 +833,13 @@ class FactorGraph:
             for factor in prior_factors:
                 cur_graph.add(factor)
             # print(time.time())
-            print('time4',time.time())
+            # print('time4',time.time())
             
             # params.setVerbosityLM("SUMMARY")
             # if i> 5: params.setMaxIterations(20)
             optimizer = gtsam.LevenbergMarquardtOptimizer(cur_graph, initials, params)
             cur_result = optimizer.optimize()
-            print('time5',time.time())
+            # print('time5',time.time())
 
             # print(cur_result)
             assert(T_WCs.shape[0] == pose_data.shape[0])
@@ -895,10 +863,6 @@ class FactorGraph:
         # Update the keyframe T_WC
         self.frames.update_T_WCs(T_WCs, unique_kf_idx[pin:])
 
-        # if self.enable_ms:
-        #     ii, jj, idx_ii2jj, valid_match, Q_ii2jj = self.prep_two_way_edges()
-        #     self.batch_calib(ii,jj,idx_ii2jj,valid_match,Q_ii2jj)
-    
         if T_WCs.shape[0] == 7:
             self.solve_VI_init()
 

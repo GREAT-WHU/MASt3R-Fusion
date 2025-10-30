@@ -570,9 +570,9 @@ if __name__ == "__main__":
         ttt = wTc[0:3,3]
         qqq = Rotation.from_matrix(wTc[0:3,0:3]).as_quat()
         bias = bs_list[idx].vector()
-        fp_out.writelines('%.3f %.5f %.5f %.5f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %.10f %.10f %.10f\n' %\
+        fp_out.writelines('%.3f %.5f %.5f %.5f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %.10f %d %d %.10f %.10f %.10f\n' %\
          (all_t[idx],ttt[0],ttt[1],ttt[2],qqq[0],qqq[1],qqq[2],qqq[3],ss_list[idx],\
-         bias[0],bias[1],bias[2],bias[3],bias[4],bias[5],idx,xyz_ref[0],xyz_ref[1],xyz_ref[2]))
+         bias[0],bias[1],bias[2],bias[3],bias[4],bias[5],idx,1,xyz_ref[0],xyz_ref[1],xyz_ref[2]))
 
 
     #! Visualize loop edges

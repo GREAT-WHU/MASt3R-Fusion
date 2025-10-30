@@ -95,6 +95,7 @@ if __name__ == '__main__':
     plt.figure('1',figsize=[6,6])
     parser = argparse.ArgumentParser()
     parser.add_argument('--seq', type=str, help='seq',default='0005')
+    parser.add_argument('--kf_only', type=bool, default = False)
     args = parser.parse_args()
     args.subcommand = 'tum'
     seq = args.seq
@@ -113,8 +114,8 @@ if __name__ == '__main__':
     args.plot = True
     
     args.est_files = [
-        #  'result_%s.txt'%seq,
-         'result_post_%s.txt'%seq,
+         'result_%s.txt'%seq,
+        #  'result_post_%s.txt'%seq,
                               ]
     label_list = ['MAST3R-Fusion']
     color_list = [[1,0,0]]
@@ -130,57 +131,37 @@ if __name__ == '__main__':
     for iii in range(len(args.est_files)):
         t_list = []
         s_list = []
-        if ('result_' in args.est_files[iii] or 'graph_' in args.est_files[iii]) and not ('vins' in args.est_files[iii]) \
-            or 'vggt' in args.est_files[iii]:
-            dd = np.loadtxt(args.est_files[iii])
-            lines = []
+        lines = []
+        dd = np.loadtxt(args.est_files[iii])
+        with open('result_temp.txt','wt') as f:
             start = 0
-            if not ('graph' in args.est_files[iii]): start = 0 
+            init_time = 0
             for iiii in range(start,dd.shape[0]):
                 if dd[iiii,0] > 1e12: dd[iiii,0]/=1e9
                 if len(t_list) > 0 and dd[iiii,0] < t_list[-1]:
+                    init_time = t_list[-1]
                     lines = []
                     t_list = []
                     s_list = []
-                if len(t_list) > 0 and dd[iiii,0] == t_list[-1]:
-                    lines = lines[:-1]
-                    t_list = t_list[:-1]
-                    s_list = s_list[:-1]
                 t_list.append(dd[iiii,0])
                 s_list.append(dd[iiii,8])
                 TTT = np.eye(4,4)
                 TTT[0:3,3] = dd[iiii,1:4]
                 TTT[0:3,0:3] = Rotation.from_quat(dd[iiii,4:8]).as_matrix()
-                if 'vggt' in args.est_files[iii]:
-                    TTT = dd[iiii,1:].reshape([4,4])
                 Twi = TTT @ np.linalg.inv(Tic)
-                # Twi = TTT
                 t = Twi[0:3,3]
-                if 'vggt' in args.est_files[iii]:
-                    t = np.array([dd[iiii,4],dd[iiii,12],-dd[iiii,8]]) 
                 q = Rotation.from_matrix(Twi[0:3,0:3]).as_quat()
-                lines.append('%f %f %f %f %f %f %f %f\n'%(dd[iiii,0],t[0],t[1],t[2],q[0],q[1],q[2],q[3]))
-                # if iiii>0 and dd[iiii,0] == dd[iiii-1,0]:
-                #     lines.append('%f %f %f %f %f %f %f %f\n'%(dd[iiii,0],t[0],t[1],t[2],q[0],q[1],q[2],q[3]))
-                #     print(len(lines))
-            with open('result_temp.txt','wt') as f:
-                for ll in lines:
-                    f.writelines(ll)
-            plt.savefig('result_temp_s.png')            
-                # np.savetxt(f,dd[:,0:8])
-            args.est_file = 'result_temp.txt'
-        elif 'vins' in args.est_files[iii]:
-            dd = np.loadtxt(args.est_files[iii])
-            dd = dd[:,:8]
-            dd[:,4] = 0.0
-            dd[:,5] = 0.0
-            dd[:,6] = 0.0
-            dd[:,7] = 1.0
-            np.savetxt(r'result_temp.txt',dd)
-            args.est_file = 'result_temp.txt'
-        else:
-            args.est_file = args.est_files[iii]
-        print(args.est_files[iii])
+                if args.kf_only:
+                    if dd[iiii,16] == 1:
+                        lines.append('%f %f %f %f %f %f %f %f\n'%(dd[iiii,0],t[0],t[1],t[2],q[0],q[1],q[2],q[3]))
+                else:
+                    lines.append('%f %f %f %f %f %f %f %f\n'%(dd[iiii,0],t[0],t[1],t[2],q[0],q[1],q[2],q[3]))
+
+        with open('result_temp.txt','wt') as f:
+            for ll in lines:
+                f.writelines(ll)
+        args.est_file = 'result_temp.txt'
+
         if args.est_files[iii].find('vis') != -1:
             args.correct_scale = True
         else:

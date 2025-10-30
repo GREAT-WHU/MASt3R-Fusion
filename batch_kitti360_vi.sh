@@ -18,9 +18,9 @@ for folder in 0005; do
         --imu_path "${base_dataset_path}/2013_05_28_drive_${folder}_sync/imu.txt" \
         --imu_dt "$imu_dt" \
         --stamp_path "${base_dataset_path}/2013_05_28_drive_${folder}_sync/camstamp.txt" \
-        --result_path "result_${folder}_temp.txt" \
+        --result_path "result_${folder}.txt" \
         --save_h5
         #--no-viz   # uncomment this for headless mode
-    mv graph.pkl graph_${folder}_temp.pkl
-    mv data.h5 data_${folder}_temp.h5
+    mv graph.pkl graph_${folder}.pkl
+    mv data.h5 data_${folder}.h5
 done

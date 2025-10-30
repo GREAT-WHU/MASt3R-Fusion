@@ -42,13 +42,6 @@ import matplotlib.cm as cm
 import numpy as np
 import cv2
 def orthographic_matrix(w, h, scale, cx, cy, znear, zfar):
-    """
-    构造正交投影矩阵
-    w, h: 图像宽高
-    scale: 缩放比例 (越大视野范围越广)
-    cx, cy: 主点 (通常取 w/2, h/2)
-    znear, zfar: 近平面/远平面
-    """
     left   = -w / (2 * scale) + (cx - w/2) / scale
     right  =  w / (2 * scale) + (cx - w/2) / scale
     bottom = -h / (2 * scale) + (cy - h/2) / scale
@@ -95,56 +88,37 @@ class OrthographicMatrix:
         return self.matrix.T.copy()
 
 def color_by_height_cmap(xyz, cmin=None, cmax=None, cmap_name='viridis'):
-    """
-    使用 matplotlib colormap 根据点云 Z 高程生成颜色
-    xyz: (N,3) 点云坐标
-    cmin: Z 最小值对应 colormap 下限，None 则取最小 Z
-    cmax: Z 最大值对应 colormap 上限，None 则取最大 Z
-    cmap_name: matplotlib colormap 名称，例如 'viridis', 'plasma', 'jet'
-    返回: (N,3) RGB 颜色数组，范围 [0,1]
-    """
     z = xyz[:, 2]
     if cmin is None:
         cmin = np.min(z)
     if cmax is None:
         cmax = np.max(z)
 
-    # 归一化到 [0,1]
     z_norm = np.clip((z - cmin) / (cmax - cmin), 0, 1)
 
     cmap = cm.get_cmap(cmap_name)
-    colors = cmap(z_norm)[:, :3]  # 取 RGB，忽略 alpha
+    colors = cmap(z_norm)[:, :3] 
     return colors
 
 def average_pose_matrices(pose_matrices):
-    """
-    对 K 个 4x4 的位姿矩阵取平均，解决四元数 ± 方向问题。
-    - 平移：直接算术平均
-    - 旋转：处理四元数方向一致性后平均
-    """
     if isinstance(pose_matrices, list):
         pose_matrices = np.stack(pose_matrices)
 
-    # 平移部分
     translations = pose_matrices[:, :3, 3]
     mean_translation = np.mean(translations, axis=0)
 
-    # 旋转部分：四元数处理
     rotations = [R.from_matrix(pose[:3, :3]) for pose in pose_matrices]
     quaternions = np.stack([rot.as_quat() for rot in rotations])  # shape (K, 4)
 
-    # 统一四元数方向
     ref_q = quaternions[0]
     for i in range(1, len(quaternions)):
         if np.dot(quaternions[i], ref_q) < 0:
             quaternions[i] = -quaternions[i]
 
-    # 平均四元数并归一化
     mean_quat = np.mean(quaternions, axis=0)
     mean_quat /= np.linalg.norm(mean_quat)
     mean_rot = R.from_quat(mean_quat).as_matrix()
 
-    # 组装平均位姿矩阵
     avg_pose = np.eye(4)
     avg_pose[:3, :3] = mean_rot
     avg_pose[:3, 3] = mean_translation
@@ -163,14 +137,13 @@ class WindowMsg:
 
 def color_by_height(xyz, cmin=-2.0, cmax=2.0):
     z = np.clip((xyz[:,2] - cmin) / (cmax - cmin), 0, 1)
-    # 简单蓝->红渐变
     colors = np.stack([z, np.zeros_like(z), 1.0 - z], axis=1)
     return colors
 
 
 
 class Window(WindowEvents):
-    title = "MASt3R-SLAM"
+    title = "MASt3R-Fusion"
     window_size = (1960, 1080)
 
     def __init__(self, states, keyframes, main2viz, viz2main, lidar_points = None, img_name = None, max_show = 10, **kwargs):

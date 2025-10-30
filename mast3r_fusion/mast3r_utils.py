@@ -209,13 +209,6 @@ import matplotlib.pyplot as plt
 def mast3r_match_asymmetric(model, frame_i, frame_j, idx_i2j_init=None):
     X, C, D, Q = mast3r_asymmetric_inference(model, frame_i, frame_j)
     
-    # fig = plt.figure()
-    # ax = fig.add_subplot(projection='3d')
-    # pts = X.view(X.shape[0], X.shape[1] * X.shape[2], X.shape[3])
-    # pts = pts.cpu().numpy()
-    # ax.scatter(pts[0,:,0],pts[0,:,1],pts[0,:,2])
-    # plt.show()
-    
     b, h, w = X.shape[:-1]
     # 2 outputs per inference
     b = b // 2
@@ -234,40 +227,6 @@ def mast3r_match_asymmetric(model, frame_i, frame_j, idx_i2j_init=None):
     Cii, Cji = einops.rearrange(C, "b h w -> b (h w) 1")
     Dii, Dji = einops.rearrange(D, "b h w c -> b (h w) c")
     Qii, Qji = einops.rearrange(Q, "b h w -> b (h w) 1")
-
-    # idx_i2j_np = idx_i2j.cpu().numpy()
-    # valid_match_j_np = valid_match_j.cpu().numpy()[0,:,0]
-    # ix_list = []
-    # iy_list = []
-    # jx_list = []
-    # jy_list = []
-    # valid_list = []
-    # for i in range(0,idx_i2j_np.shape[1]):
-    #     idi = i
-    #     ix = idi % 512
-    #     iy = idi // 512
-    #     if ix % 5 == 0 and iy%5 ==0:
-    #         idj = idx_i2j_np[0,i]
-    #         jx = idj % 512
-    #         jy = idj // 512
-    #         ix_list.append(ix)
-    #         iy_list.append(iy)
-    #         jx_list.append(jx)
-    #         jy_list.append(jy)
-    #         valid_list.append(valid_match_j_np[idi])
-    # valid_list = np.array(valid_list)
-    # ix_list = np.array(ix_list)[valid_list]
-    # iy_list = np.array(iy_list)[valid_list]
-    # jx_list = np.array(jx_list)[valid_list]
-    # jy_list = np.array(jy_list)[valid_list]
-    # plt.figure()
-    # plt.subplot(2,1,1)
-    # plt.imshow((frame_j.uimg.cpu().numpy()*255).astype(np.uint8))
-    # plt.scatter(ix_list,iy_list,c=np.arange(len(ix_list)),cmap='hsv',s=1)
-    # plt.subplot(2,1,2)
-    # plt.imshow((frame_i.uimg.cpu().numpy()*255).astype(np.uint8))
-    # plt.scatter(jx_list,jy_list,c=np.arange(len(ix_list)),cmap='hsv',s=1)
-    # plt.show()
 
     return idx_i2j, valid_match_j, Xii, Cii, Qii, Xji, Cji, Qji
 

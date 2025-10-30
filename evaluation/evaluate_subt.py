@@ -91,7 +91,7 @@ if __name__ == '__main__':
     color_list = [[0,0,1],[1,0.6,1],[1,0,0]]
     plt.figure('1',figsize=[6,6])
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seq', type=str, help='seq',default='handheld1',choices=['handheld1', 'handheld2', 'overexposure'])
+    parser.add_argument('--seq', type=str, help='seq',default='overexposure',choices=['handheld1', 'handheld2', 'overexposure'])
     parser.add_argument('--kf_only', type=bool, default = True)
     args = parser.parse_args()
     args.subcommand = 'tum'
@@ -163,7 +163,7 @@ if __name__ == '__main__':
                 t = Twi[0:3,3]
                 q = Rotation.from_matrix(Twi[0:3,0:3]).as_quat()
                 if args.kf_only:
-                    if dd[iiii,-1] == 1:
+                    if dd[iiii,16] == 1:
                         lines.append('%f %f %f %f %f %f %f %f\n'%(dd[iiii,0],t[0],t[1],t[2],q[0],q[1],q[2],q[3]))
                 else:
                     lines.append('%f %f %f %f %f %f %f %f\n'%(dd[iiii,0],t[0],t[1],t[2],q[0],q[1],q[2],q[3]))
