@@ -27,8 +27,10 @@ The system is capable of handling arbitrarily long sequences based on <b>8 GB</b
 
 ## Preview 
 
-<div style="display: flex; justify-content: center; gap: 20px;" align=center>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; justify-items: center;" align="center">
   <img alt="" src="assets/mast3r-fusion1.gif" width="400px" />
+  <img alt="" src="assets/mast3r-fusion3.gif" width="400px" />
+  <img alt="" src="assets/mast3r-fusion4.gif" width="400px" />
   <img alt="" src="assets/mast3r-fusion2.gif" width="400px" />
 </div>
 
