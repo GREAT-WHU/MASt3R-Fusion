@@ -49,7 +49,7 @@ First, create a new **conda** environment and install the required dependencies:
 ```bash
 conda create -n mast3r_fusion python=3.11.9
 conda activate mast3r_fusion
-pip install torch==2.5.1+cu124 torchvision==0.19.1+cu124 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
 pip install opencv-python==4.10.0.84 opencv-contrib-python==4.10.0.84
 pip install h5py pyparsing
 ```
