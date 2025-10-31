@@ -1,16 +1,22 @@
-# MASt3R-Fusion
-
->Integrating Feed-Forward Visual Model with IMU, GNSS for High-Functionality SLAM.
+<h1 align="center">MASt3R-Fusion</h1>
 
 <p align="center">
-  <img src="./assets/abs2_.png" alt="" width="600px"><br>
-  <em>(The <b>heatmap</b> indicates the 
-	inter-frame angle of cross-temporal  data association (loop closure).)</em><br>
+  <b>Integrating Feed-Forward Visual Model with IMU, GNSS for High-Functionality SLAM</b><br>
+  <sub>
+    Yuxuan Zhou, Xingxing Li, Shengyu Li, Zhuohao Yan, Chunxi Xia, Shaoquan Feng
+  </sub>
 </p>
 
-[[Paper](https://arxiv.org/abs/2509.20757)] [Video (coming soon...)]
+<p align="center">
+  <img src="./assets/abs2_.png" alt="MASt3R-Fusion Overview" width="600px"><br>
+  <em>  <sub>(The <b>heatmap</b> indicates the inter-frame angle of cross-temporal data association (loop closure).)</sub>
+</em>
+</p>
 
-
+<p align="center">
+  📄 <a href="https://arxiv.org/abs/2509.20757">Paper</a> |
+  🎥 <em>Video (coming soon...)</em>
+</p>
 
 ## What is this? 
 
