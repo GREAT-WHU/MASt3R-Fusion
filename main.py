@@ -388,7 +388,6 @@ if __name__ == "__main__":
                                                                                  frame_id))
             factor_graph.fp.flush()
 
-        # run_backend_orig(states, keyframes)
         print('[INFO] backend.',time.time())
 
 
@@ -423,7 +422,6 @@ if __name__ == "__main__":
             'id': frame_temp.frame_id,
         }, buffer)
         buffer.seek(0)
-        # 2. 存到 hdf5，每个 iframe 一个 group
         f_h5.create_dataset(f"frame_{iframe}", data=np.void(buffer.read()))
 
     factor_graph.save_graph('graph.pkl')
