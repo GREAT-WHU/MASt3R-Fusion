@@ -200,10 +200,10 @@ if __name__ == "__main__":
     # one for initialization of the graph
     # one for common cases
     # one for bad IMU cases
-    accel_noise_sigma = noise[0] * 1
-    gyro_noise_sigma = noise[1]  * 1
-    accel_bias_rw_sigma = noise[2] * 1
-    gyro_bias_rw_sigma = noise[3] * 1
+    accel_noise_sigma = noise[0] * 10
+    gyro_noise_sigma = noise[1]  * 10
+    accel_bias_rw_sigma = noise[2] * 10
+    gyro_bias_rw_sigma = noise[3] * 10
     GRAVITY = 9.81
     measured_acc_cov = np.eye(3,3) * math.pow(accel_noise_sigma,2)
     measured_omega_cov = np.eye(3,3) * math.pow(gyro_noise_sigma,2)
@@ -239,8 +239,8 @@ if __name__ == "__main__":
     params.setBiasOmegaCovariance(bias_omega_cov)
     params.setBiasAccOmegaInit(bias_acc_omega_init)
 
-    accel_noise_sigma = noise[0] * 1
-    gyro_noise_sigma =  noise[1] * 1
+    accel_noise_sigma = noise[0] * 100000
+    gyro_noise_sigma =  noise[1] * 100000
     accel_bias_rw_sigma = noise[2]
     gyro_bias_rw_sigma = noise[3]
     GRAVITY = 9.81
