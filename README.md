@@ -42,7 +42,7 @@ The system is capable of handling arbitrarily long sequences based on <b>8 GB</b
 
 ## Update
 - [x] Code uploaded. 2025/10/28 
-- [x] Wuhan dataset (GNSS fuison example). (Sorry for the unexpected delay. It is available now!)
+- [x] Wuhan dataset (GNSS fuison example). 2026/04/20 (Sorry for the unexpected delay. It is available now!)
 - [ ] Multi-thread pipeline.
 
 ## Installation
@@ -210,7 +210,7 @@ python evaluation/check_h5.py # for visualization of the reconstruction results
 
 Download the WHU dataset [here](https://pan.baidu.com/s/1AbUEPk9G-TO9iTGN0R7TYA?pwd=thit).
 
-check the following scripts:
+Check the following scripts:
 ```bash
 bash batch_whu_vi.sh # for real-time SLAM
 bash batch_whu_loop.sh # for global SLAM (with loop closure)
