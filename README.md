@@ -42,7 +42,7 @@ The system is capable of handling arbitrarily long sequences based on <b>8 GB</b
 
 ## Update
 - [x] Code uploaded. 2025/10/28 
-- [ ] Wuhan dataset (GNSS fuison example). ETA: 1~2 weeks
+- [x] Wuhan dataset (GNSS fuison example). (Sorry for the unexpected delay. It is available now!)
 - [ ] Multi-thread pipeline.
 
 ## Installation
@@ -202,13 +202,26 @@ bash batch_subt_loop.sh # for global SLAM
 ```
 and
 ```bash
-python evaluation/evaluate_subt.py # for evaluation of the pose estimation results;
-python evaluation/check_h5.py # for visualization of the reconstruction results.
+python evaluation/evaluate_subt.py # for evaluation of the pose estimation results
+python evaluation/check_h5.py # for visualization of the reconstruction results
 ```
 
 ## Run on Wuhan Dataset (V + I + G)
 
-Under construction, coming soon. (ETA: Nov 2025)
+Download the WHU dataset [here](https://pan.baidu.com/s/1AbUEPk9G-TO9iTGN0R7TYA?pwd=thit).
+
+check the following scripts:
+```bash
+bash batch_whu_vi.sh # for real-time SLAM
+bash batch_whu_loop.sh # for global SLAM (with loop closure)
+bash batch_whu_loop_gnss.sh # for global SLAM (with loop closure and GNSS fusion)
+```
+and
+```bash
+python evaluation/evaluate_whu.py # for evaluation of the pose estimation results (V-I mode with or without loop closure)
+python evaluation/evaluate_whu_gnss.py # for evaluation of the pose estimation results (with GNSS fusion)
+python evaluation/check_h5.py # for visualization of the reconstruction results.
+```
 
 ## Run on Your Own Data
 

@@ -165,7 +165,7 @@ if __name__ == "__main__":
     all_gnss = np.array([])
     if ENABLE_GNSS:
         all_gnss = np.loadtxt(args.gnss_path)
-        LEVER = np.array([0.020, 0.285, 0.423]) - np.array([0.0,0.47,-0.04])
+        LEVER = np.copy(calib['lever'])
 
     config = yaml.load(open(CONFIG_PATH,'rt'), Loader=yaml.SafeLoader)
     calib = yaml.load(open(CALIB_PATH,'rt'), Loader=yaml.SafeLoader)
@@ -511,8 +511,8 @@ if __name__ == "__main__":
             noise = gtsam.noiseModel.Robust.Create(\
                           gtsam.noiseModel.mEstimator.Cauchy(25),\
                 gtsam.noiseModel.Diagonal.Sigmas(np.array([1.0,1.0,10.0])*0.01/4))
-            if args.enable_gap:
-                noise =  gtsam.noiseModel.Diagonal.Sigmas(np.array([1.0,1.0,10.0])*0.01)
+            # if args.enable_gap:
+            #     noise =  gtsam.noiseModel.Diagonal.Sigmas(np.array([1.0,1.0,10.0])*0.01)
             gnss_factor = gtsam.GPSFactorLever(G(i), pos_global, LEVER,noise)
             
             vvv = new_preintegration.predict(gtsam.NavState(gtsam.Pose3(wTcs_list[iii] @ np.linalg.inv(Tic)),vs_list[iii]),bs_list[iii]).velocity()
