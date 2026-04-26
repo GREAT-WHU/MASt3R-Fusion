@@ -161,15 +161,14 @@ if __name__ == "__main__":
     ENABLE_GNSS = args.enable_gnss
     RESULT_PATH = args.result_path
 
+    config = yaml.load(open(CONFIG_PATH,'rt'), Loader=yaml.SafeLoader)
+    calib = yaml.load(open(CALIB_PATH,'rt'), Loader=yaml.SafeLoader)
+    Tic = np.copy(calib['Tic'])
 
     all_gnss = np.array([])
     if ENABLE_GNSS:
         all_gnss = np.loadtxt(args.gnss_path)
         LEVER = np.copy(calib['lever'])
-
-    config = yaml.load(open(CONFIG_PATH,'rt'), Loader=yaml.SafeLoader)
-    calib = yaml.load(open(CALIB_PATH,'rt'), Loader=yaml.SafeLoader)
-    Tic = np.copy(calib['Tic'])
 
     if config['ms_opt']['imu_format'] == 'custom_deg':
         try:
