@@ -203,12 +203,12 @@ bash batch_subt_loop.sh # for global SLAM
 and
 ```bash
 python evaluation/evaluate_subt.py # for evaluation of the pose estimation results
-python evaluation/check_h5.py # for visualization of the reconstruction results
+python evaluation/check_h5.py # for visualization of the reconstruction results; specify the pose file to use globally optimized poses
 ```
 
 ## Run on Wuhan Dataset (V + I + G)
 
-Download the WHU dataset [here](https://pan.baidu.com/s/1AbUEPk9G-TO9iTGN0R7TYA?pwd=thit).
+Download the WHU dataset [here](https://pan.baidu.com/s/1PXY_TRMOAWNzTH-bkxhCow?pwd=e6c9).
 
 Check the following scripts:
 ```bash
