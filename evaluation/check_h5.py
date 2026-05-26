@@ -83,16 +83,16 @@ if __name__ == "__main__":
 
     id_poses = {}
 
+    print('Scanning poses...')
+    for i in tqdm.tqdm(range(len_h5(args.h5))):
+        dd = load_frame_from_h5(H5_FILE, i)
+        id_poses[i] = dd['T_WC'][-1,:]
+        h,w = dd['uimg'].shape[:2]
     if not args.pose_file is None:
+        id_poses = {}
         pppp = np.loadtxt(args.pose_file)
         for i in range(len(pppp)):
             id_poses[int(pppp[i,15])] = pppp[i,1:9]
-    else:
-        print('Scanning poses...')
-        for i in tqdm.tqdm(range(len_h5(args.h5))):
-            dd = load_frame_from_h5(H5_FILE, i)
-            id_poses[i] = dd['T_WC'][-1,:]
-            h,w = dd['uimg'].shape[:2]
 
 
     keyframes = SharedKeyframes(manager, h, w,buffer=1024)
