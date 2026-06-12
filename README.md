@@ -236,10 +236,6 @@ Once everything is ready, refer to the instructions above and give it a try!
 
 (In current implementation, it is recommended to set the start point around the vehicle is about to move.)
 
-## Other tips
-
-**The config file matters**. For handheld datasets, try configurations similar to config/base_subt_handheld.yaml.
-
 ## Results
 
 <p align="center">
