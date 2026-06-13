@@ -123,7 +123,7 @@ def Align2GTSAM_factors(H11: np.ndarray, v11: np.ndarray, lin_list, wTcs, ss, ii
     return factors
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="GNSS-IMU-LIO Integration")
+    parser = argparse.ArgumentParser(description="Global optimization")
 
     parser.add_argument("--config", type=str, default="config/base_kitti360.yaml", help="config file")
     parser.add_argument("--graph_path", type=str, default="graph_33000.pkl",
@@ -443,7 +443,9 @@ if __name__ == "__main__":
                 MMMp = np.linalg.inv(initials.atPose3(X(iii)).matrix()) @ initials.atPose3(X(jjj)).matrix()
 
                 threshold = 100000000000000000 # accept all loops, leave them to Cauchy function
-                threshold_t =100000000000000000
+                threshold_t =1000
+                outlier_distance = 1
+                outlier_angle = 3.0
 
                 if np.linalg.norm(trans.m2att(MMM[0:3,0:3]))*57.3 < threshold and np.linalg.norm(MMM[0:3,3]) < threshold_t:
                     if iiter > 1:
@@ -453,7 +455,13 @@ if __name__ == "__main__":
                     else:
                         noise = gtsam.noiseModel.Diagonal.Sigmas(np.array([0.001,0.001,0.001,0.01,0.01,0.01]))
                     f = gtsam_unstable.ExPoseConstraintFactor(X(iii),
-                    X(jjj),M(iii*100000+jjj), gtsam.noiseModel.Diagonal.Sigmas(np.array([0.001,0.001,0.001,0.01,0.01,0.01])))
+                        X(jjj),M(iii*100000+jjj), gtsam.noiseModel.Diagonal.Sigmas(np.array([0.001,0.001,0.001,0.01,0.01,0.01])))
+
+                    #! Tuning tip: Loose this f for better convergence
+                    # For example:
+                    # f = gtsam_unstable.ExPoseConstraintFactor(X(iii),
+                    #     X(jjj),M(iii*100000+jjj), gtsam.noiseModel.Diagonal.Sigmas(np.array([0.001,0.001,0.001,0.09,0.09,0.09])))
+
                     f1 = gtsam.PriorFactorPose3(M(iii*100000+jjj),gtsam.Pose3(np.linalg.inv(wTc0) @ wTc1), noise)
 
                     if iiter <=2:
@@ -464,7 +472,7 @@ if __name__ == "__main__":
                         dT = np.linalg.inv(MMMp) @ MMM
                         distance = np.linalg.norm(dT[0:3,3])
                         dangle = np.linalg.norm(Rotation.from_matrix(dT[0:3,0:3]).as_rotvec()) * 57.3
-                        if distance > 1 or dangle > 3.0: continue
+                        if distance > outlier_distance or dangle > outlier_angle: continue
                         else:
                             if np.linalg.norm(trans.m2att(MMM[0:3,0:3]))*57.3 < 90:
                                 ii_loop_list.append(all_loop_dd[i]['iijj'][0])   
@@ -527,6 +535,7 @@ if __name__ == "__main__":
         opt_params = gtsam.LevenbergMarquardtParams()
         opt_params.setMaxIterations(20)
         opt_params.setVerbosityLM("SUMMARY") 
+        opt_params.setlambdaUpperBound(1e12) # for better convergence
         optimizer = gtsam.LevenbergMarquardtOptimizer(cur_graph, initials, opt_params)
         print(cur_graph.error(initials))
         cur_result = optimizer.optimize()
@@ -537,21 +546,6 @@ if __name__ == "__main__":
             vs_list[iii] = cur_result.atVector(V(iii))
         Tic = cur_result.atPose3(C(0)).matrix()
 
-    # bs_series= []
-    # for iii in range(0,wTcs_list.shape[0]):
-    #     bs_series.append(bs_list[iii].vector())
-    # bs_series = np.array(bs_series)
-
-    # plt.figure('bias')
-    # plt.subplot(1,2,1)
-    # plt.plot(bs_series[:,0])
-    # plt.plot(bs_series[:,1])
-    # plt.plot(bs_series[:,2])
-    # plt.subplot(1,2,2)
-    # plt.plot(bs_series[:,3])
-    # plt.plot(bs_series[:,4])
-    # plt.plot(bs_series[:,5])
-    # plt.savefig('test_bias.png')
 
     #! Output results
     t_series = []
@@ -575,13 +569,13 @@ if __name__ == "__main__":
 
 
     #! Visualize loop edges
-    plt.figure('234',figsize=[20,20])
+    plt.figure('234',figsize=[4.2,4.2])
     from matplotlib import cm, colors
     base_cmap = cm.get_cmap("autumn")
     def smooth_remap(x, gamma=0.5):
         return np.power(x, gamma)
 
-    norm = plt.Normalize(vmin=0, vmax=np.pi)
+    norm = plt.Normalize(vmin=0, vmax=180)
     new_cmap = colors.LinearSegmentedColormap.from_list(
         "compressed_autumn", base_cmap(smooth_remap(np.linspace(0,1,256)))
     )
@@ -604,16 +598,15 @@ if __name__ == "__main__":
         yaw_diff_abs = np.abs(yaw_diff)
         yaw_diffs.append(yaw_diff_abs)
         
-        color = new_cmap(norm(yaw_diff_abs))
+        color = new_cmap(norm(yaw_diff_abs * 180 / np.pi))
         
         plt.plot([pose_i.x(), pose_j.x()],
                  [pose_i.y(), pose_j.y()],
                  c=color, zorder=10000)
-    
     sm = cm.ScalarMappable(cmap=new_cmap, norm=norm)
     sm.set_array([])  
     cbar = plt.gcf().colorbar(sm, ax=plt.gca())
-    cbar.set_label("Yaw difference (rad)")
+    cbar.set_label("Loop Closure Angle (deg)")
 
     plt.plot(x_series,y_series)
     plt.axis('equal')
