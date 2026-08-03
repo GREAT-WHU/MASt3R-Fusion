@@ -278,6 +278,8 @@ class StampedFiles(MonocularDataset):
                 self.rgb_files = natsorted(list((self.dataset_path).glob("*.png")))
             if float(dd[0])>1e12:
                 self.timestamps = dd.astype(np.float64) / 1e9
+            else:
+                self.timestamps = dd.astype(np.float64)
         elif len(dd.shape) == 2:
             self.timestamps = dd[:,0].astype(np.float64) 
             for i in range(dd.shape[0]):

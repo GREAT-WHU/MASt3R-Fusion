@@ -11,6 +11,19 @@ from mast3r_fusion.geometry import constrain_points_to_ray
 from plyfile import PlyData, PlyElement
 
 
+def iter_keyframes(frames: SharedKeyframes):
+    """Yield the keyframes currently retained in the rolling buffer.
+
+    ``SharedKeyframes`` is indexed by its global keyframe ID, while ``len``
+    reports only the number of entries still resident in its fixed-size
+    buffer. Once old entries have been rolled out, the first valid ID is
+    ``rollup_sum``, not zero.
+    """
+    start = frames.rollup_sum.value
+    for keyframe_id in range(start, start + len(frames)):
+        yield frames[keyframe_id]
+
+
 def prepare_savedir(args, dataset):
     save_dir = pathlib.Path("logs")
     if args.save_as != "default":
@@ -32,9 +45,7 @@ def save_traj(
     logdir.mkdir(exist_ok=True, parents=True)
     logfile = logdir / logfile
     with open(logfile, "w") as f:
-        # for keyframe_id in frames.keyframe_ids:
-        for i in range(len(frames)):
-            keyframe = frames[i]
+        for keyframe in iter_keyframes(frames):
             t = timestamps[keyframe.frame_id]
             if intrinsics is None:
                 T_WC = as_SE3(keyframe.T_WC)
@@ -49,8 +60,7 @@ def save_reconstruction(savedir, filename, keyframes, c_conf_threshold):
     savedir.mkdir(exist_ok=True, parents=True)
     pointclouds = []
     colors = []
-    for i in range(len(keyframes)):
-        keyframe = keyframes[i]
+    for keyframe in iter_keyframes(keyframes):
         if config["use_calib"]:
             X_canon = constrain_points_to_ray(
                 keyframe.img_shape.flatten()[:2], keyframe.X_canon[None], keyframe.K
@@ -73,8 +83,7 @@ def save_reconstruction(savedir, filename, keyframes, c_conf_threshold):
 def save_keyframes(savedir, timestamps, keyframes: SharedKeyframes):
     savedir = pathlib.Path(savedir)
     savedir.mkdir(exist_ok=True, parents=True)
-    for i in range(len(keyframes)):
-        keyframe = keyframes[i]
+    for keyframe in iter_keyframes(keyframes):
         t = timestamps[keyframe.frame_id]
         filename = savedir / f"{t}.png"
         cv2.imwrite(

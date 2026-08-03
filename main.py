@@ -156,7 +156,10 @@ if __name__ == "__main__":
 
 
     if args.save_h5:
-        f_h5 = h5py.File('data.h5', "w")
+        import os
+        output_dir = os.environ.get('MAST3R_OUTPUT_DIR', '.')
+        h5_path = os.path.join(output_dir, 'data.h5')
+        f_h5 = h5py.File(h5_path, "w")
     
     manager = mp.Manager()
     main2viz = new_queue(manager, args.no_viz)
@@ -404,27 +407,32 @@ if __name__ == "__main__":
         i += 1
 
 
-    # finally 
-    last_pin = factor_graph.get_unique_kf_idx()[-1]
-    for iframe in range(factor_graph.last_pin,last_pin+1):
-        frame_temp = keyframes[iframe] 
-        buffer = io.BytesIO()
-        torch.save({
-            'feat': frame_temp.feat.cpu(), 
-            'pos': frame_temp.pos.cpu(),   
-            'X': frame_temp.X_canon.cpu(),
-            'C': frame_temp.C.cpu(),
-            'K': frame_temp.K.cpu(),
-            'N': frame_temp.N,
-            'uimg': (frame_temp.uimg * 255).to(torch.uint8).cpu().numpy(),
-            'img_shape': frame_temp.img_shape.cpu(),
-            'T_WC': frame_temp.T_WC.data.cpu(),
-            'id': frame_temp.frame_id,
-        }, buffer)
-        buffer.seek(0)
-        f_h5.create_dataset(f"frame_{iframe}", data=np.void(buffer.read()))
+    # finally
+    if args.save_h5 and f_h5 is not None:
+        last_pin = factor_graph.get_unique_kf_idx()[-1]
+        for iframe in range(factor_graph.last_pin,last_pin+1):
+            frame_temp = keyframes[iframe]
+            buffer = io.BytesIO()
+            torch.save({
+                'feat': frame_temp.feat.cpu(),
+                'pos': frame_temp.pos.cpu(),
+                'X': frame_temp.X_canon.cpu(),
+                'C': frame_temp.C.cpu(),
+                'K': frame_temp.K.cpu(),
+                'N': frame_temp.N,
+                'uimg': (frame_temp.uimg * 255).to(torch.uint8).cpu().numpy(),
+                'img_shape': frame_temp.img_shape.cpu(),
+                'T_WC': frame_temp.T_WC.data.cpu(),
+                'id': frame_temp.frame_id,
+            }, buffer)
+            buffer.seek(0)
+            f_h5.create_dataset(f"frame_{iframe}", data=np.void(buffer.read()))
+        f_h5.close()
 
-    factor_graph.save_graph('graph.pkl')
+    import os
+    output_dir = os.environ.get('MAST3R_OUTPUT_DIR', '.')
+    graph_path = os.path.join(output_dir, 'graph.pkl')
+    factor_graph.save_graph(graph_path)
 
     # if dataset.save_results:
     #     save_dir, seq_name = eval.prepare_savedir(args, dataset)

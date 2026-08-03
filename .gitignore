@@ -16,6 +16,6 @@ evo*
 data/*/
 !data/*/.gitkeep
 *.part
-
+checkpoints/
 # Credentials
 .env

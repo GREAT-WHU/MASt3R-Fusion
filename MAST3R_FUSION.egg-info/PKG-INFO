@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: MAST3R-FUSION
+Version: 0.0.1
+Requires-Dist: numpy==1.26.4
+Requires-Dist: einops
+Requires-Dist: pyrealsense2
+Requires-Dist: evo
+Requires-Dist: natsort
+Requires-Dist: pykdtree
+Requires-Dist: torchcodec==0.1
+Requires-Dist: lietorch@ git+https://github.com/princeton-vl/lietorch.git
+Requires-Dist: plyfile

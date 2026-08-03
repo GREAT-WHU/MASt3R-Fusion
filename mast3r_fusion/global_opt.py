@@ -27,6 +27,23 @@ import matplotlib.pyplot as plt
 from .vio_utils import VisualIMUAlignment, keys2str, skew_sym
 
 BA2GTSAM_PYTHON_IMPLEMENTATION = False
+_SCALE_EPS = 1e-6
+
+
+def _positive_scale(value):
+    """Keep Sim(3) scale values finite and strictly positive."""
+    scale = float(value)
+    if not np.isfinite(scale):
+        raise ValueError(f"Non-finite Sim(3) scale: {scale}")
+    return max(abs(scale), _SCALE_EPS)
+
+
+def _gyro_for_preintegration(gyro):
+    """Return angular velocity in rad/s for GTSAM preintegration."""
+    gyro = np.asarray(gyro)
+    if config["ms_opt"]["imu_format"] == "custom_rad":
+        return gyro
+    return np.deg2rad(gyro)
 
 if not BA2GTSAM_PYTHON_IMPLEMENTATION:
     # C++ implementation
@@ -47,7 +64,7 @@ else:
             Xj[0:3,0:3] *= ss[j]
             Xij = np.linalg.inv(Xi) @ Xj
 
-            s = np.power(np.linalg.det(Xij[0:3,0:3]),1.0/3)
+            s = _positive_scale(np.cbrt(np.linalg.det(Xij[0:3,0:3])))
             R = Xij[0:3,0:3]/s
             t = Xij[0:3,3]
             pXij_pXj = np.zeros([7,7])
@@ -144,6 +161,9 @@ class FactorGraph:
 
         self.init_vi_signal = False
         self.enable_ms = False
+        # Low-excitation captures (for example a seated subject) do not
+        # constrain visual-inertial scale reliably.
+        self.enable_vi_init = config["ms_opt"].get("enable_vi_init", True)
         self.viz_matching = False
 
 
@@ -492,7 +512,7 @@ class FactorGraph:
         dd = self.imu_pool.get_records(self.poses_stamps[self.frames[kf_idx].frame_id],
                                        self.poses_stamps[frame_id])
         for t0, t1, ddd in dd:
-            new_preintegration.integrateMeasurement(ddd[3:6],ddd[0:3]/180*math.pi,t1-t0)
+            new_preintegration.integrateMeasurement(ddd[3:6],_gyro_for_preintegration(ddd[0:3]),t1-t0)
         print(self.vs[kf_idx])
         wTi_pred = new_preintegration.predict(gtsam.NavState(gtsam.Pose3(self.wTcs[kf_idx] @ np.linalg.inv(self.Tic)), self.vs[kf_idx]), self.bs[kf_idx]).pose().matrix()
         dT = np.linalg.inv(self.wTcs[kf_idx] @ np.linalg.inv(self.Tic)) @ wTi_pred
@@ -635,7 +655,7 @@ class FactorGraph:
                         if t1 - t0 > 0.1: is_bad = True;print(t0,t1-t0,'!!!!!!!!!!!!!!!!!!!!!!!!')
                     if is_bad: new_preintegration =  gtsam.PreintegratedCombinedMeasurements(self.params_loose,self.bs[iii-1+pin])
                     for t0, t1, ddd in dd:
-                        new_preintegration.integrateMeasurement(ddd[3:6],ddd[0:3]/180*math.pi,t1-t0)
+                        new_preintegration.integrateMeasurement(ddd[3:6],_gyro_for_preintegration(ddd[0:3]),t1-t0)
                     ff = gtsam.gtsam.CombinedImuFactor(\
                                 Z(iii-1),V(iii-1),Z(iii),V(iii),B(iii-1),B(iii),\
                                 new_preintegration)
@@ -709,9 +729,10 @@ class FactorGraph:
             self.bs.append(gtsam.imuBias.ConstantBias(np.array([.0,.0,.0]),np.array([.0,.0,.0])))
             self.vs.append(np.array([.0,.0,.0]))
             T_WC = T_WCs64[iii,0].matrix().cpu().numpy()
-            T_WC[0:3,0:3] /= T_WCs64[iii,0].data[-1].item()
+            scale = _positive_scale(T_WCs64[iii,0].data[-1].item())
+            T_WC[0:3,0:3] /= scale
             self.wTcs.append(T_WC)
-            self.ss.append(T_WCs64[iii,0].data[-1].item())
+            self.ss.append(scale)
 
         aligncore = mast3r_fusion_backends.AlignCoreCalib()
         for i in range(self.cfg['max_iters']):
@@ -795,7 +816,7 @@ class FactorGraph:
                                 if t1 - t0 > 0.1: is_bad = True;print(t0,t1-t0,'!!!!!!!!!!!!!!!!!!!!!!!!')
                             if is_bad: new_preintegration =  gtsam.PreintegratedCombinedMeasurements(self.params_loose,self.bs[iii-1+pin])
                             for t0, t1, ddd in dd:
-                                new_preintegration.integrateMeasurement(ddd[3:6],ddd[0:3]/180*math.pi,t1-t0)
+                                new_preintegration.integrateMeasurement(ddd[3:6],_gyro_for_preintegration(ddd[0:3]),t1-t0)
                             ff = gtsam.gtsam.CombinedImuFactor(\
                                         Z(iii-1),V(iii-1),Z(iii),V(iii),B(iii-1),B(iii),\
                                         new_preintegration)
@@ -849,7 +870,7 @@ class FactorGraph:
                     self.Tic = cur_result.atPose3(C(0)).matrix()
                     self.bs[iii+pin] = cur_result.atConstantBias(B(iii))
                     self.vs[iii+pin] = cur_result.atVector(V(iii))
-                self.ss[iii+pin] = cur_result.atDouble(S(iii))
+                self.ss[iii+pin] = _positive_scale(cur_result.atDouble(S(iii)))
                 self.wTcs[iii+pin] = cur_result.atPose3(X(iii)).matrix()
                 # print(self.bs[iii],self.vs[iii])
             self.cur_graph = cur_graph
@@ -863,7 +884,7 @@ class FactorGraph:
         # Update the keyframe T_WC
         self.frames.update_T_WCs(T_WCs, unique_kf_idx[pin:])
 
-        if T_WCs.shape[0] == 7:
+        if T_WCs.shape[0] == 7 and self.enable_vi_init:
             self.solve_VI_init()
 
 
@@ -884,7 +905,7 @@ class FactorGraph:
                 dd = self.imu_pool.get_records(self.poses_stamps[self.frames[iii-1+pin].frame_id],
                                                self.poses_stamps[self.frames[iii+pin].frame_id])
                 for t0, t1, ddd in dd:
-                    new_preintegration.integrateMeasurement(ddd[3:6],ddd[0:3]/180*math.pi,t1-t0)
+                    new_preintegration.integrateMeasurement(ddd[3:6],_gyro_for_preintegration(ddd[0:3]),t1-t0)
                 preintegrations.append(new_preintegration)
 
         sum_g = np.zeros(3,dtype = np.float64)
@@ -908,7 +929,8 @@ class FactorGraph:
             wTcs = []
             for iii in range(0,T_WCs.shape[0]):
                 T_WC = T_WCs[iii,0].matrix().cpu().numpy()
-                T_WC[0:3,0:3] /= T_WCs[iii,0].data[-1].item()
+                scale = _positive_scale(T_WCs[iii,0].data[-1].item())
+                T_WC[0:3,0:3] /= scale
                 wTcs.append(T_WC)
             vi_result = VisualIMUAlignment(self.Tic, np.array(wTcs), preintegrations, ignore_lever= True)
             print(vi_result)
@@ -917,7 +939,7 @@ class FactorGraph:
                 print(vi_result['wTbs'][iii])
                 T_temp = vi_result['wTbs'][iii] @ self.Tic
                 # T_temp[0:3,3] += 1000.0
-                dd = np.concatenate([T_temp[0:3,3],Rotation.from_matrix(T_temp[0:3,0:3]).as_quat(),np.array([T_WCs[iii,0].data[-1].item() * vi_result['s']])])
+                dd = np.concatenate([T_temp[0:3,3],Rotation.from_matrix(T_temp[0:3,0:3]).as_quat(),np.array([_positive_scale(T_WCs[iii,0].data[-1].item() * vi_result['s'])])])
                 all_cs.append(torch.tensor(dd[None].astype(np.float32),device='cuda'))
             T_WCs = lietorch.Sim3(torch.stack(all_cs))
             self.frames.update_T_WCs(T_WCs, unique_kf_idx[pin:])
@@ -925,9 +947,10 @@ class FactorGraph:
             T_WCs64 = lietorch.Sim3(T_WCs.data.to(torch.float64))
             for iii in range(T_WCs64.shape[0]):
                 T_WC = T_WCs64[iii,0].matrix().cpu().numpy()
-                T_WC[0:3,0:3] /= T_WCs64[iii,0].data[-1].item()
+                scale = _positive_scale(T_WCs64[iii,0].data[-1].item())
+                T_WC[0:3,0:3] /= scale
                 self.wTcs[iii] = T_WC
-                self.ss[iii] = T_WCs64[iii,0].data[-1].item()
+                self.ss[iii] = scale
                 self.bs[iii] = vi_result['bs'][iii]
             self.init_vi_signal = True
             self.enable_ms = True
