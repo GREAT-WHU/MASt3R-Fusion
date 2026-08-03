@@ -7,3 +7,15 @@
 temp*
 thirdparty*
 evo*
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*mjpeg
+# Raw data downloads
+data/*/
+!data/*/.gitkeep
+*.part
+
+# Credentials
+.env
