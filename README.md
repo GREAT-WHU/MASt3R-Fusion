@@ -41,6 +41,7 @@ The system is capable of handling arbitrarily long sequences based on <b>8 GB</b
 </div>
 
 ## Update
+- [x] bugfix：主要涉及静止启动数据、Z轴非朝上的IMU。2026/09/05
 - [x] Code uploaded. 2025/10/28 
 - [x] Wuhan dataset (GNSS fuison example). 2026/04/20 (Sorry for the unexpected delay. It is available now!)
 - [ ] Multi-thread pipeline.
@@ -218,6 +219,22 @@ bash batch_euroc_vi.sh datasets/euroc MH_01_easy
 Omit the sequence name to run all 11 sequences. Select another GPU with
 `GPU_ID=1`. Results, factor graphs, and H5 files are written below
 `results/euroc/`.
+
+Evaluate one sequence with evo APE after the run:
+
+```bash
+python evaluation/evaluate_euroc.py \
+    --dataset-root datasets/euroc \
+    --results-root results/euroc \
+    MH_01_easy
+```
+
+Omit the sequence name to evaluate all 11 sequences. The evaluator converts
+EuRoC's body/IMU ground truth to the camera frame using
+`config/intrinsics_euroc.yaml`, discards poses before VI initialization, and
+uses SE(3) alignment without scale correction. Per-sequence plots and evo
+archives, together with `summary.csv`, are written to
+`results/euroc/evaluation/`.
 
 ## Run on Wuhan Dataset (V + I + G)
 
