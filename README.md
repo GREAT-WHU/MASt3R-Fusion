@@ -41,7 +41,7 @@ The system is capable of handling arbitrarily long sequences based on <b>8 GB</b
 </div>
 
 ## Update
-- [x] bugfix：主要涉及静止启动数据、Z轴非朝上的IMU。2026/09/05
+- [x] Bug fix: primarily addresses sequences with stationary starts and IMUs whose z-axis does not point upward. 2026/09/05
 - [x] Code uploaded. 2025/10/28 
 - [x] Wuhan dataset (GNSS fuison example). 2026/04/20 (Sorry for the unexpected delay. It is available now!)
 - [ ] Multi-thread pipeline.
