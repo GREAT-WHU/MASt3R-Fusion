@@ -167,6 +167,7 @@ class FactorGraph:
         self.marg_factor = None
         self.cur_graph   = None
         self.cur_result  = None
+        self.z0_prior_pose = None
         # sliding window related
 
         self.init_bias_noise = np.array(config['ms_opt']['init_bias_noise'])
@@ -652,9 +653,9 @@ class FactorGraph:
                     prior_factors.append(gtsam.BetweenFactorPose3(C(iii), C(iii-1), gtsam.Pose3(np.eye(4,4)), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1,1,1,1])*fix_noise)))
                 if iii ==0 and pin == 0:
                     if not self.enable_ms:
-                        prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
+                        prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(self.z0_prior_pose), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
                     else:
-                        TTT = np.eye(4,4)
+                        TTT = self.z0_prior_pose
                         prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(TTT), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
                 
                 # Regularization
@@ -815,9 +816,9 @@ class FactorGraph:
 
                         if iii ==0 and pin == 0:
                             if not self.enable_ms:
-                                prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
+                                prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(self.z0_prior_pose), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
                             else:
-                                TTT = np.eye(4,4)
+                                TTT = self.z0_prior_pose
                                 # TTT[0:3,3] += 1000.0 
                                 prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(TTT), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
                         # prior_factors.append(gtsam.PriorFactorConstantBias(B(iii),\
@@ -878,11 +879,13 @@ class FactorGraph:
         Xs, T_WCs, Cs = self.get_poses_points(unique_kf_idx[pin:])
 
         preintegrations = []
+        imu_records = []
         for iii in range(0,T_WCs.shape[0]):
             if iii > 0:
                 new_preintegration =  gtsam.PreintegratedCombinedMeasurements(self.params,self.bs[iii-1+pin])
                 dd = self.imu_pool.get_records(self.poses_stamps[self.frames[iii-1+pin].frame_id],
                                                self.poses_stamps[self.frames[iii+pin].frame_id])
+                imu_records.append(dd)
                 for t0, t1, ddd in dd:
                     new_preintegration.integrateMeasurement(ddd[3:6],ddd[0:3]/180*math.pi,t1-t0)
                 preintegrations.append(new_preintegration)
@@ -910,7 +913,17 @@ class FactorGraph:
                 T_WC = T_WCs[iii,0].matrix().cpu().numpy()
                 T_WC[0:3,0:3] /= T_WCs[iii,0].data[-1].item()
                 wTcs.append(T_WC)
-            vi_result = VisualIMUAlignment(self.Tic, np.array(wTcs), preintegrations, ignore_lever= True)
+            vi_result = VisualIMUAlignment(
+                self.Tic,
+                np.array(wTcs),
+                preintegrations,
+                ignore_lever=True,
+                repropagate_gyro_bias=config["ms_opt"].get(
+                    "vi_init_repropagate_gyro_bias", False
+                ),
+                imu_records=imu_records,
+                preintegration_params=self.params,
+            )
             print(vi_result)
             all_cs = []
             for iii in range(0,T_WCs.shape[0]):
@@ -929,6 +942,8 @@ class FactorGraph:
                 self.wTcs[iii] = T_WC
                 self.ss[iii] = T_WCs64[iii,0].data[-1].item()
                 self.bs[iii] = vi_result['bs'][iii]
+            self.z0_prior_pose = np.array(vi_result['wTbs'][0], copy=True)
+            self.z0_prior_pose[0:3,3] = 0.0
             self.init_vi_signal = True
             self.enable_ms = True
             print(vi_result)

@@ -21,7 +21,30 @@ def skew_sym(xx):
     x = xx[0]; y = xx[1]; z = xx[2]
     return np.array([0, -z, y, z, 0, -x, -y, x, 0]).reshape([3,3])
 
-def VisualIMUAlignment(Tic, wTcs, preintegrations, ignore_lever = False, disable_scale = False):
+def _repropagate_with_gyro_bias(params, imu_records, gyro_bias):
+    """Replay VI-init IMU intervals using the estimated gyroscope bias."""
+    bias = gtsam.imuBias.ConstantBias(np.zeros(3), gyro_bias)
+    corrected = []
+    for records in imu_records:
+        pim = gtsam.PreintegratedCombinedMeasurements(params, bias)
+        for t0, t1, data in records:
+            pim.integrateMeasurement(
+                data[3:6], data[0:3] * np.pi / 180.0, t1 - t0
+            )
+        corrected.append(pim)
+    return corrected
+
+
+def VisualIMUAlignment(
+    Tic,
+    wTcs,
+    preintegrations,
+    ignore_lever=False,
+    disable_scale=False,
+    repropagate_gyro_bias=False,
+    imu_records=None,
+    preintegration_params=None,
+):
     vs = []
     bs = []
     if not ignore_lever:
@@ -62,6 +85,21 @@ def VisualIMUAlignment(Tic, wTcs, preintegrations, ignore_lever = False, disable
     for i in range(0,wTcs.shape[0]):
         bs[i] = gtsam.imuBias.ConstantBias(np.array([.0,.0,.0]),bg)
     print('bg: ',bg)
+
+    if repropagate_gyro_bias:
+        if preintegration_params is None or imu_records is None:
+            raise ValueError(
+                "IMU records and preintegration parameters are required "
+                "to repropagate gyroscope bias"
+            )
+        if len(imu_records) != len(preintegrations):
+            raise ValueError(
+                "IMU record intervals must match the preintegrations"
+            )
+        preintegrations = _repropagate_with_gyro_bias(
+            preintegration_params, imu_records, bg
+        )
+        print('Repropagated VI-init IMU with bg:', bg)
     
     # linearAlignment
     all_frame_count = wTcs.shape[0]

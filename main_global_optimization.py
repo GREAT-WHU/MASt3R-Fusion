@@ -372,6 +372,8 @@ if __name__ == "__main__":
         wTcs_list[i] = dT @ wTcs_list[i]
         vs_list[i] = dT[0:3,0:3] @ vs_list[i]
 
+    z0_prior_pose = np.array(wTcs_list[0] @ np.linalg.inv(Tic), copy=True)
+    z0_prior_pose[0:3,3] = 0.0
     
     CCCCC = len(wTcs_list)
 
@@ -399,7 +401,7 @@ if __name__ == "__main__":
         prior_factors.append(gtsam.PriorFactorPose3(C(0),gtsam.Pose3(Tic), gtsam.noiseModel.Diagonal.Sigmas(np.array([1e-4,1e-4,1e-4,1e-4,1e-4,1e-4]))))
         for iii in range(0,CCCCC):
             if iii == 0 and dT is None:
-                TTT= np.eye(4,4)
+                TTT = z0_prior_pose
                 prior_factors.append(gtsam.PriorFactorPose3(Z(iii),gtsam.Pose3(TTT), gtsam.noiseModel.Diagonal.Sigmas(np.array([1,1,1e-6,1e-6,1e-6,1e-6]))))
             prior_factors.append(gtsam_unstable.ExPoseConstraintFactor(Z(iii),X(iii),C(0), gtsam.noiseModel.Diagonal.Sigmas(np.array([1e-4,1e-4,1e-4,1e-4,1e-4,1e-4]))))
             if iii > 0:
