@@ -206,6 +206,19 @@ python evaluation/evaluate_subt.py # for evaluation of the pose estimation resul
 python evaluation/check_h5.py # for visualization of the reconstruction results; specify the pose file to use globally optimized poses
 ```
 
+## Run on EuRoC MAV (V + I)
+
+Place the extracted sequences under `datasets/euroc` using the original EuRoC
+layout (for example `datasets/euroc/MH_01_easy/mav0`). Then run one sequence:
+
+```bash
+bash batch_euroc_vi.sh datasets/euroc MH_01_easy
+```
+
+Omit the sequence name to run all 11 sequences. Select another GPU with
+`GPU_ID=1`. Results, factor graphs, and H5 files are written below
+`results/euroc/`.
+
 ## Run on Wuhan Dataset (V + I + G)
 
 Download the WHU dataset [here](https://pan.baidu.com/s/1PXY_TRMOAWNzTH-bkxhCow?pwd=e6c9).

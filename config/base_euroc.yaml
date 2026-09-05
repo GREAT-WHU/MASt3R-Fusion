@@ -1,0 +1,73 @@
+use_calib: True
+single_thread: False
+
+dataset:
+  # EuRoC cam0 is 20 Hz; process at 10 Hz by default.
+  subsample: 2
+  img_downsample: 1
+  center_principle_point: True
+
+matching:
+  max_iter: 10
+  lambda_init: 1e0
+  convergence_thresh: 1e-6
+  dist_thresh: 1
+  radius: 1
+  dilation_max: 5
+
+tracking:
+  min_match_frac: 0.00
+  max_iters: 50
+  C_conf: 0.0
+  Q_conf: 1.5
+  rel_error: 1e-3
+  delta_norm: 1e-3
+  huber: 1.345
+  match_frac_thresh: 0.5
+  sigma_ray: 0.003
+  sigma_dist: 1e+1
+  sigma_pixel: 1.0
+  sigma_depth: 1e+1
+  sigma_point: 0.05
+  pixel_border: -10
+  depth_eps: 1e-6
+  filtering_mode: weighted_pointmap
+  filtering_score: median
+
+local_opt:
+  pin: 1
+  C_conf: 0.0
+  Q_conf: 1.5
+  min_match_frac: 0.0
+  pixel_border: -10000
+  depth_eps: 1e-6
+  max_iters: 10
+  sigma_pixel: 0.0005
+  sigma_depth: 1e+1
+  delta_norm: 1e-8
+  use_cuda: True
+
+retrieval:
+  k: 10
+  min_thresh: 0.0
+
+ms_opt:
+  # EuRoC ADIS16448 values: accel/gyro noise density, accel/gyro random walk.
+  imu_noise: [ 0.001962, 0.001028445124575, 0.00004905, 0.00000036361026075] # accel_noise_sigma, gyro_noise_sigma, accel_bias_rw_sigma, gyro_bias_rw_sigma
+  init_bias_noise: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+  regularization_noise: [0.01, 0.01, 0.01, 1, 1, 1]
+  enable_excalib: False
+  subpixel_factor: 1
+  d_diff_threshold: 1.0
+  window_num: 10
+  imu_format: euroc
+  # Replay VI-initialization IMU intervals after estimating gyro bias.
+  vi_init_repropagate_gyro_bias: True
+
+loop:
+  conf_noise_along: 0.25
+  conf_noise_cross: 0.10
+  interest_distance: 5.0
+
+global_opt:
+  imu_noise: [ 0.001962, 0.001028445124575, 0.00004905, 0.00000036361026075] # accel_noise_sigma, gyro_noise_sigma, accel_bias_rw_sigma, gyro_bias_rw_sigma

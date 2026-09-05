@@ -146,7 +146,6 @@ class FactorGraph:
         self.enable_ms = False
         self.viz_matching = False
 
-
         self.enable_excalib = config["ms_opt"]['enable_excalib']
         self.subpixel_factor = config["ms_opt"]['subpixel_factor']
         self.d_diff_threshold = config["ms_opt"]['d_diff_threshold']
@@ -225,13 +224,18 @@ class FactorGraph:
             all_imu_new[:,4:7] = all_imu[:,8:11]
             all_imu_new = all_imu_new[:,:7]
             self.imu_pool = data_utils.IMUPool(all_imu_new, degree = True, dt = args.imu_dt)
+        elif config['ms_opt']['imu_format'] == 'euroc':
+            # data.csv: timestamp[ns], wx, wy, wz [rad/s], ax, ay, az [m/s^2]
+            all_imu = np.loadtxt(args.imu_path, delimiter=',', comments='#', ndmin=2)
+            self.imu_pool = data_utils.IMUPool(all_imu[:, :7], degree=False, dt=args.imu_dt)
+        else:
+            raise ValueError(f"Unsupported IMU format: {config['ms_opt']['imu_format']}")
 
         self.fp = open(args.result_path,'wt')
         self.fp_id = 0
         self.transform_world = False
 
         self.all_factors = []
-
 
     def save_graph(self, path):
 

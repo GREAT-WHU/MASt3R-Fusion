@@ -122,7 +122,8 @@ class FrameTracker:
             torch.unique(idx_f2k[valid_match_k[:, 0]]).shape[0] / valid_kf.numel()
         )
 
-        new_kf = min(match_frac_k, unique_frac_f) < self.cfg["match_frac_thresh"]
+        new_kf = min(match_frac_k, unique_frac_f) < self.cfg["match_frac_thresh"] and torch.norm(T_CkCf.translation()[0,0:3].cpu())>1e-2
+        # print(match_frac_k,unique_frac_f,torch.norm(T_CkCf.translation()[0,0:3].cpu()),T_CkCf.translation()[0,0:3].cpu())
 
         # Rest idx if new keyframe
         if new_kf:

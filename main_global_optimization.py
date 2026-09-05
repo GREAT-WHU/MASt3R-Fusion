@@ -189,8 +189,12 @@ if __name__ == "__main__":
         all_imu_new[:,4:7] = all_imu[:,8:11]
         all_imu_new = all_imu_new[:,:7]
         imu_pool = data_utils.IMUPool(all_imu_new, degree = True, dt = imu_dt)
+    elif config['ms_opt']['imu_format'] == 'euroc':
+        # data.csv: timestamp[ns], wx, wy, wz [rad/s], ax, ay, az [m/s^2]
+        all_imu = np.loadtxt(args.imu_path, delimiter=',', comments='#', ndmin=2)
+        imu_pool = data_utils.IMUPool(all_imu[:, :7], degree=False, dt=imu_dt)
     else:
-        raise Exception()
+        raise ValueError(f"Unsupported IMU format: {config['ms_opt']['imu_format']}")
     
     noise = np.array(config['global_opt']['imu_noise'])
     

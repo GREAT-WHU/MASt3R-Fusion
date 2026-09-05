@@ -317,13 +317,22 @@ if __name__ == "__main__":
                 if add_new_kf and (np.linalg.norm(dT[0:3,3]) < 1.0 and np.linalg.norm(Rotation.from_matrix(dT[0:3,0:3]).as_rotvec())<5.0/57.3):
                     add_new_kf = False
                     tracker.idx_f2k = tracker.idx_f2k_backup
-    
+
         if add_new_kf:
             keyframes.append(frame)
             states.queue_global_optimization(len(keyframes) - 1 + keyframes.rollup_sum.value)
         print('[INFO] backend',time.time())
-        run_backend(states, keyframes)
-        
+
+        while True:
+            with states.lock: pending_before = len(states.global_optimizer_tasks)
+            if pending_before == 0: break
+            if states.is_paused() or states.get_mode() == Mode.INIT: break
+
+            run_backend(states, keyframes)
+
+            with states.lock: pending_after = len(states.global_optimizer_tasks)
+            if pending_after >= pending_before: break
+
         print(factor_graph.frames_to_save)
         if args.save_h5:
             for iframe in factor_graph.frames_to_save:
@@ -404,25 +413,28 @@ if __name__ == "__main__":
         i += 1
 
 
-    # finally 
-    last_pin = factor_graph.get_unique_kf_idx()[-1]
-    for iframe in range(factor_graph.last_pin,last_pin+1):
-        frame_temp = keyframes[iframe] 
-        buffer = io.BytesIO()
-        torch.save({
-            'feat': frame_temp.feat.cpu(), 
-            'pos': frame_temp.pos.cpu(),   
-            'X': frame_temp.X_canon.cpu(),
-            'C': frame_temp.C.cpu(),
-            'K': frame_temp.K.cpu(),
-            'N': frame_temp.N,
-            'uimg': (frame_temp.uimg * 255).to(torch.uint8).cpu().numpy(),
-            'img_shape': frame_temp.img_shape.cpu(),
-            'T_WC': frame_temp.T_WC.data.cpu(),
-            'id': frame_temp.frame_id,
-        }, buffer)
-        buffer.seek(0)
-        f_h5.create_dataset(f"frame_{iframe}", data=np.void(buffer.read()))
+    # finally
+    if args.save_h5:
+        last_pin = factor_graph.get_unique_kf_idx()[-1]
+        for iframe in range(factor_graph.last_pin,last_pin+1):
+            frame_temp = keyframes[iframe]
+            buffer = io.BytesIO()
+            torch.save({
+                'feat': frame_temp.feat.cpu(),
+                'pos': frame_temp.pos.cpu(),
+                'X': frame_temp.X_canon.cpu(),
+                'C': frame_temp.C.cpu(),
+                'K': frame_temp.K.cpu(),
+                'N': frame_temp.N,
+                'uimg': (frame_temp.uimg * 255).to(torch.uint8).cpu().numpy(),
+                'img_shape': frame_temp.img_shape.cpu(),
+                'T_WC': frame_temp.T_WC.data.cpu(),
+                'id': frame_temp.frame_id,
+            }, buffer)
+            buffer.seek(0)
+            # Store one serialized keyframe per HDF5 dataset.
+            f_h5.create_dataset(f"frame_{iframe}", data=np.void(buffer.read()))
+        f_h5.close()
 
     factor_graph.save_graph('graph.pkl')
 

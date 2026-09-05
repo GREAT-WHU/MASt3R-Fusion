@@ -95,11 +95,15 @@ class EurocDataset(MonocularDataset):
         self.use_calibration = True
         self.dataset_path = pathlib.Path(dataset_path)
         rgb_list = self.dataset_path / "mav0/cam0/data.csv"
-        tstamp_rgb = np.loadtxt(rgb_list, delimiter=",", dtype=np.unicode_, skiprows=0)
+        tstamp_rgb = np.loadtxt(
+            rgb_list, delimiter=",", dtype=np.unicode_, comments="#", ndmin=2
+        )
         self.rgb_files = [
             self.dataset_path / "mav0/cam0/data" / f for f in tstamp_rgb[:, 1]
         ]
-        self.timestamps = tstamp_rgb[:, 0]
+        # EuRoC timestamps are integer nanoseconds.  Keep float64 precision and
+        # expose seconds, which is the time unit expected by IMUPool/GTSAM.
+        self.timestamps = tstamp_rgb[:, 0].astype(np.float64) / 1e9
         with open(self.dataset_path / "mav0/cam0/sensor.yaml") as f:
             self.cam0 = yaml.load(f, Loader=yaml.FullLoader)
         W, H = self.cam0["resolution"]
@@ -363,7 +367,11 @@ def load_dataset(dataset_path,stamp_path = None):
     split_dataset_type = dataset_path.split("/")
     if "tum" in split_dataset_type:
         return TUMDataset(dataset_path)
-    if "euroc" in split_dataset_type:
+    # Do not require users to name the parent directory exactly "euroc".
+    # The standard MAV layout is unambiguous and is also used by ASL's zips.
+    if "euroc" in [part.lower() for part in split_dataset_type] or (
+        pathlib.Path(dataset_path) / "mav0/cam0/data.csv"
+    ).is_file():
         return EurocDataset(dataset_path)
     if "eth3d" in split_dataset_type:
         return ETH3DDataset(dataset_path)
