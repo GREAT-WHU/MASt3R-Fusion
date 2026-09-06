@@ -220,6 +220,41 @@ Omit the sequence name to run all 11 sequences. Select another GPU with
 `GPU_ID=1`. Results, factor graphs, and H5 files are written below
 `results/euroc/`.
 
+### Loop Closure and Global Optimization
+
+After the real-time run, detect loop closures from the saved keyframes. For
+example, for `MH_01_easy`:
+
+```bash
+sequence=MH_01_easy
+dataset_root=datasets/euroc
+
+python main_loop.py \
+    --config config/base_euroc.yaml \
+    --h5_file "results/euroc/data_${sequence}.h5" \
+    --loop_output "results/euroc/loop_${sequence}.pkl"
+```
+
+Then optimize the saved VIO factor graph together with the detected loop
+closure factors:
+
+```bash
+sequence=MH_01_easy
+dataset_root=datasets/euroc
+
+python main_global_optimization.py \
+    --config config/base_euroc.yaml \
+    --graph_path "results/euroc/graph_${sequence}.pkl" \
+    --loop_path "results/euroc/loop_${sequence}.pkl" \
+    --calib_path config/intrinsics_euroc.yaml \
+    --imu_path "${dataset_root}/${sequence}/mav0/imu0/data.csv" \
+    --imu_dt 0.0 \
+    --result_path "results/euroc/result_global_${sequence}.txt"
+```
+
+This produces `results/euroc/result_global_MH_01_easy.txt`. Repeat both
+commands with another sequence name to process the remaining sequences.
+
 Evaluate one sequence with evo APE after the run:
 
 ```bash
@@ -229,12 +264,25 @@ python evaluation/evaluate_euroc.py \
     MH_01_easy
 ```
 
+To evaluate a globally optimized trajectory instead, select the corresponding
+result filename pattern:
+
+```bash
+python evaluation/evaluate_euroc.py \
+    --dataset-root datasets/euroc \
+    --results-root results/euroc \
+    --result-pattern 'result_global_{sequence}.txt' \
+    --output-dir results/euroc/evaluation_global \
+    MH_01_easy
+```
+
 Omit the sequence name to evaluate all 11 sequences. The evaluator converts
 EuRoC's body/IMU ground truth to the camera frame using
 `config/intrinsics_euroc.yaml`, discards poses before VI initialization, and
 uses SE(3) alignment without scale correction. Per-sequence plots and evo
-archives, together with `summary.csv`, are written to
-`results/euroc/evaluation/`.
+archives, together with `summary.csv`, are written to the selected output
+directory (`results/euroc/evaluation/` by default, or
+`results/euroc/evaluation_global/` in the global-trajectory example above).
 
 ## Run on Wuhan Dataset (V + I + G)
 
